@@ -1,4 +1,4 @@
-from aiogram import Router, F, Bot
+from aiogram.types import LinkPreviewOptions
 from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.types import Message, ChatMemberUpdated, BufferedInputFile
 from aiogram.filters.chat_member_updated import ChatMemberUpdatedFilter, JOIN_TRANSITION
@@ -217,7 +217,12 @@ async def _send_welcome(chat_id: int, bot: Bot, settings: dict, text: str, keybo
         sent_ids.extend(m.message_id for m in msgs)
         # Telegram media groups mein inline buttons nahi lagte, isliye alag message
         if keyboard:
-            btn_msg = await bot.send_message(chat_id, "👇", reply_markup=keyboard)
+            btn_msg = await bot.send_message(
+    chat_id,
+    "👇",
+    reply_markup=keyboard,
+    link_preview_options=LinkPreviewOptions(is_disabled=True),
+            )
             sent_ids.append(btn_msg.message_id)
         return sent_ids
 
