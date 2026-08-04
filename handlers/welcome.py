@@ -171,6 +171,10 @@ async def cmd_setwelcome(message: Message, command: CommandObject, bot: Bot):
     if not clean_text:
         clean_text = db.DEFAULT_TEXT if not file_id else ""
 
+    # User jab custom photo/media set kare, tab Card feature auto-off kar do taaki original media hi dikhe
+    if file_id:
+        await db.set_welcome_card(message.chat.id, False)
+
     if file_id and media_type:
         if media_type == "video":
             progress = ProgressMessage(bot, message.chat.id)
@@ -234,19 +238,19 @@ async def _send_welcome(chat_id: int, bot: Bot, settings: dict, text: str, keybo
     media_type = settings["media_type"]
     file_id = settings["media_file_id"]
 
-    if media_type == "photo":
+    if media_type == "photo" and file_id:
         msg = await bot.send_photo(chat_id, file_id, caption=text, reply_markup=keyboard)
-    elif media_type == "video":
+    elif media_type == "video" and file_id:
         msg = await bot.send_video(chat_id, file_id, caption=text, reply_markup=keyboard)
-    elif media_type == "animation":
+    elif media_type == "animation" and file_id:
         msg = await bot.send_animation(chat_id, file_id, caption=text, reply_markup=keyboard)
-    elif media_type == "sticker":
+    elif media_type == "sticker" and file_id:
         sticker_msg = await bot.send_sticker(chat_id, file_id)
         sent_ids.append(sticker_msg.message_id)
         msg = None
         if text.strip():
             msg = await bot.send_message(chat_id, text, reply_markup=keyboard, link_preview_options=NO_LINK_PREVIEW)
-    elif media_type == "document":
+    elif media_type == "document" and file_id:
         msg = await bot.send_document(chat_id, file_id, caption=text, reply_markup=keyboard)
     else:
         msg = await bot.send_message(chat_id, text, reply_markup=keyboard, link_preview_options=NO_LINK_PREVIEW)
@@ -307,10 +311,12 @@ async def _handle_new_member(chat, user, bot: Bot):
     keyboard = build_keyboard(buttons_from_json(send_settings["buttons"]))
 
     try:
-        if settings.get("welcome_card"):
+        # Agar user ne specific custom media file upload ki hui hai, to pehle wahi prioritize hogi
+        if settings.get("welcome_card") and not send_settings.get("media_file_id"):
             sent_ids = await _send_welcome_card(chat, user, bot, settings, member_count, text, keyboard)
         else:
             sent_ids = await _send_welcome(chat.id, bot, send_settings, text, keyboard)
+        
         auto_delete = settings.get("auto_delete_seconds") or 0
         if auto_delete > 0 and sent_ids:
             asyncio.create_task(_delayed_delete(bot, chat.id, sent_ids, auto_delete))
@@ -343,4 +349,4 @@ async def on_new_chat_members(message: Message, bot: Bot):
             await bot.delete_message(message.chat.id, message.message_id)
         except Exception:
             pass
-        
+            
