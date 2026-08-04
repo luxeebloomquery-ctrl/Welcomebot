@@ -1,7 +1,10 @@
 from aiogram import Router, F, Bot
-from aiogram.filters import Command, CommandObject
+from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.types import Message, ChatMemberUpdated, BufferedInputFile
 from aiogram.filters.chat_member_updated import ChatMemberUpdatedFilter, JOIN_TRANSITION
+
+
+
 
 import asyncio
 import json
@@ -16,6 +19,13 @@ from utils.card import generate_welcome_card
 from handlers.album import build_album_media
 
 router = Router()
+@router.message(CommandStart())
+async def cmd_start(message: Message):
+    await message.answer(
+        "👋 Welcome!\n\n"
+        "Ye Welcome Bot hai.\n"
+        "Commands dekhne ke liye /help use kare."
+    )
 
 HELP_TEXT = (
     "<b>Welcome Bot — Commands</b>\n\n"
