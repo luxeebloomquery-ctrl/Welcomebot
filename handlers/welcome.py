@@ -1,6 +1,6 @@
 from aiogram import Router, F, Bot
 from aiogram.filters import Command, CommandObject, CommandStart
-from aiogram.types import Message, ChatMemberUpdated, BufferedInputFile
+from aiogram.types import Message, ChatMemberUpdated, BufferedInputFile, LinkPreviewOptions
 from aiogram.filters.chat_member_updated import ChatMemberUpdatedFilter, JOIN_TRANSITION
 
 import asyncio
@@ -233,11 +233,21 @@ async def _send_welcome(chat_id: int, bot: Bot, settings: dict, text: str, keybo
         sent_ids.append(sticker_msg.message_id)
         msg = None
         if text.strip():
-            msg = await bot.send_message(chat_id, text, reply_markup=keyboard)
+            msg = await bot.send_message(
+    chat_id,
+    text,
+    reply_markup=keyboard,
+    link_preview_options=LinkPreviewOptions(is_disabled=True)
+            )
     elif media_type == "document":
         msg = await bot.send_document(chat_id, file_id, caption=text, reply_markup=keyboard)
     else:
-        msg = await bot.send_message(chat_id, text, reply_markup=keyboard)
+        msg = await bot.send_message(
+    chat_id,
+    text,
+    reply_markup=keyboard,
+    link_preview_options=LinkPreviewOptions(is_disabled=True)
+        )
 
     if msg:
         sent_ids.append(msg.message_id)
