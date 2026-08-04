@@ -18,7 +18,7 @@ from handlers.album import build_album_media
 
 router = Router()
 
-# Global Link Preview Disable Configuration
+# Global Link Preview Disable Configuration (Sirf Text Messages ke liye)
 NO_LINK_PREVIEW = LinkPreviewOptions(is_disabled=True)
 
 
@@ -146,7 +146,6 @@ async def cmd_setwelcome(message: Message, command: CommandObject, bot: Bot):
 
     await db.ensure_chat_row(message.chat.id, message.chat.title or "")
 
-    # Reply kiye gaye media se text nikalna, ya command args se
     reply = message.reply_to_message
     media_type, file_id = (None, None)
     raw_text = command.args or ""
@@ -216,13 +215,12 @@ async def _send_welcome(chat_id: int, bot: Bot, settings: dict, text: str, keybo
     """Type ke hisab se sahi media method call karta hai. Sent message IDs return karta hai."""
     sent_ids = []
 
-    # Album (multi-media) sabse pehle check karo
+    # Album (multi-media) check
     if settings.get("album_json"):
         items = json.loads(settings["album_json"])
         media = build_album_media(items, text)
         msgs = await bot.send_media_group(chat_id, media)
         sent_ids.extend(m.message_id for m in msgs)
-        # Telegram media groups mein inline buttons nahi lagte, isliye alag message
         if keyboard:
             btn_msg = await bot.send_message(
                 chat_id,
@@ -237,11 +235,11 @@ async def _send_welcome(chat_id: int, bot: Bot, settings: dict, text: str, keybo
     file_id = settings["media_file_id"]
 
     if media_type == "photo":
-        msg = await bot.send_photo(chat_id, file_id, caption=text, reply_markup=keyboard, link_preview_options=NO_LINK_PREVIEW)
+        msg = await bot.send_photo(chat_id, file_id, caption=text, reply_markup=keyboard)
     elif media_type == "video":
-        msg = await bot.send_video(chat_id, file_id, caption=text, reply_markup=keyboard, link_preview_options=NO_LINK_PREVIEW)
+        msg = await bot.send_video(chat_id, file_id, caption=text, reply_markup=keyboard)
     elif media_type == "animation":
-        msg = await bot.send_animation(chat_id, file_id, caption=text, reply_markup=keyboard, link_preview_options=NO_LINK_PREVIEW)
+        msg = await bot.send_animation(chat_id, file_id, caption=text, reply_markup=keyboard)
     elif media_type == "sticker":
         sticker_msg = await bot.send_sticker(chat_id, file_id)
         sent_ids.append(sticker_msg.message_id)
@@ -249,7 +247,7 @@ async def _send_welcome(chat_id: int, bot: Bot, settings: dict, text: str, keybo
         if text.strip():
             msg = await bot.send_message(chat_id, text, reply_markup=keyboard, link_preview_options=NO_LINK_PREVIEW)
     elif media_type == "document":
-        msg = await bot.send_document(chat_id, file_id, caption=text, reply_markup=keyboard, link_preview_options=NO_LINK_PREVIEW)
+        msg = await bot.send_document(chat_id, file_id, caption=text, reply_markup=keyboard)
     else:
         msg = await bot.send_message(chat_id, text, reply_markup=keyboard, link_preview_options=NO_LINK_PREVIEW)
 
@@ -280,7 +278,7 @@ async def _send_welcome_card(chat, user, bot: Bot, settings: dict, member_count:
         avatar_bytes=avatar_bytes,
     )
     photo = BufferedInputFile(card_bytes, filename="welcome_card.png")
-    msg = await bot.send_photo(chat.id, photo, caption=text, reply_markup=keyboard, link_preview_options=NO_LINK_PREVIEW)
+    msg = await bot.send_photo(chat.id, photo, caption=text, reply_markup=keyboard)
     return [msg.message_id]
 
 
@@ -298,7 +296,6 @@ async def _handle_new_member(chat, user, bot: Bot):
     if delay > 0:
         await asyncio.sleep(delay)
 
-    # Random welcome: multiple templates mein se ek random pick karo
     send_settings = settings
     if settings.get("random_welcome"):
         tpl = await db.get_random_template(chat.id)
@@ -332,17 +329,14 @@ async def _delayed_delete(bot: Bot, chat_id: int, message_ids: list[int], delay_
 
 @router.chat_member(ChatMemberUpdatedFilter(member_status_changed=JOIN_TRANSITION))
 async def on_user_join(event: ChatMemberUpdated, bot: Bot):
-    """Bot admin ho to ye trigger hota hai (zyada reliable, silent joins bhi pakadta hai)."""
     await _handle_new_member(event.chat, event.new_chat_member.user, bot)
 
 
 @router.message(F.new_chat_members)
 async def on_new_chat_members(message: Message, bot: Bot):
-    """Fallback: bot admin na ho tab bhi ye service message se new members pakad leta hai."""
     for user in message.new_chat_members:
         await _handle_new_member(message.chat, user, bot)
 
-    # Clean service message: Telegram ka native "X joined" message delete karo agar setting on hai
     settings = await db.get_settings(message.chat.id)
     if settings.get("clean_service"):
         try:
