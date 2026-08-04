@@ -17,7 +17,7 @@ from utils.video import process_video
 
 router = Router()
 
-def get_no_preview():
+def get_link_preview_config():
     return LinkPreviewOptions(is_disabled=True)
 
 
@@ -25,7 +25,7 @@ def get_no_preview():
 async def cmd_start(message: Message):
     await message.answer(
         "👋 Welcome!\n\nYe Welcome Bot hai.\nCommands dekhne ke liye /help use kare.",
-        link_preview_options=get_no_preview(),
+        link_preview_options=get_link_preview_config(),
     )
 
 
@@ -67,13 +67,13 @@ def _media_type_and_id(message: Message):
 
 @router.message(Command("help"))
 async def cmd_help(message: Message):
-    await message.answer(HELP_TEXT, link_preview_options=get_no_preview())
+    await message.answer(HELP_TEXT, parse_mode="HTML", link_preview_options=get_link_preview_config())
 
 
 @router.message(Command("settings"))
 async def cmd_settings(message: Message, bot: Bot):
     if message.chat.type == "private":
-        await message.answer("Ye command sirf groups mein kaam karta hai.", link_preview_options=get_no_preview())
+        await message.answer("Ye command sirf groups mein kaam karta hai.", link_preview_options=get_link_preview_config())
         return
     settings = await db.get_settings(message.chat.id)
     status = "✅ ON" if settings["enabled"] else "❌ OFF"
@@ -88,16 +88,16 @@ async def cmd_settings(message: Message, bot: Bot):
         f"Buttons: {'Yes' if settings['buttons'] else 'No'}\n\n"
         f"Preview ke liye /preview use karo."
     )
-    await message.answer(text, link_preview_options=get_no_preview())
+    await message.answer(text, parse_mode="HTML", link_preview_options=get_link_preview_config())
 
 
 @router.message(Command("welcome"))
 async def cmd_welcome_toggle(message: Message, command: CommandObject, bot: Bot):
     if message.chat.type == "private":
-        await message.answer("Ye command sirf groups mein kaam karta hai.", link_preview_options=get_no_preview())
+        await message.answer("Ye command sirf groups mein kaam karta hai.", link_preview_options=get_link_preview_config())
         return
     if not await is_admin(bot, message.chat, message.from_user):
-        await message.answer("Ye command sirf group admins use kar sakte hain.", link_preview_options=get_no_preview())
+        await message.answer("Ye command sirf group admins use kar sakte hain.", link_preview_options=get_link_preview_config())
         return
 
     await db.ensure_chat_row(message.chat.id, message.chat.title or "")
@@ -105,16 +105,17 @@ async def cmd_welcome_toggle(message: Message, command: CommandObject, bot: Bot)
 
     if arg == "on":
         await db.set_enabled(message.chat.id, True)
-        await message.answer("✅ Welcome message chalu kar diya gaya.", link_preview_options=get_no_preview())
+        await message.answer("✅ Welcome message chalu kar diya gaya.", link_preview_options=get_link_preview_config())
     elif arg == "off":
         await db.set_enabled(message.chat.id, False)
-        await message.answer("❌ Welcome message band kar diya gaya.", link_preview_options=get_no_preview())
+        await message.answer("❌ Welcome message band kar diya gaya.", link_preview_options=get_link_preview_config())
     else:
         settings = await db.get_settings(message.chat.id)
         status = "ON ✅" if settings["enabled"] else "OFF ❌"
         await message.answer(
             f"Welcome abhi <b>{status}</b> hai.\nUse: <code>/welcome on</code> ya <code>/welcome off</code>",
-            link_preview_options=get_no_preview(),
+            parse_mode="HTML",
+            link_preview_options=get_link_preview_config(),
         )
 
 
@@ -122,10 +123,10 @@ async def cmd_welcome_toggle(message: Message, command: CommandObject, bot: Bot)
 @router.message(F.caption.contains("/setwelcome"))
 async def cmd_setwelcome(message: Message, command: CommandObject = None, bot: Bot = None):
     if message.chat.type == "private":
-        await message.answer("Ye command sirf groups mein kaam karta hai.", link_preview_options=get_no_preview())
+        await message.answer("Ye command sirf groups mein kaam karta hai.", link_preview_options=get_link_preview_config())
         return
     if not await is_admin(bot, message.chat, message.from_user):
-        await message.answer("Ye command sirf group admins use kar sakte hain.", link_preview_options=get_no_preview())
+        await message.answer("Ye command sirf group admins use kar sakte hain.", link_preview_options=get_link_preview_config())
         return
 
     await db.ensure_chat_row(message.chat.id, message.chat.title or "")
@@ -161,7 +162,8 @@ async def cmd_setwelcome(message: Message, command: CommandObject = None, bot: B
         await message.answer(
             "Kuch text do ya media pe reply karke caption ke sath likho.\n"
             "Example: <code>/setwelcome Welcome {mention} to {chatname}!</code>",
-            link_preview_options=get_no_preview(),
+            parse_mode="HTML",
+            link_preview_options=get_link_preview_config(),
         )
         return
 
@@ -183,27 +185,27 @@ async def cmd_setwelcome(message: Message, command: CommandObject = None, bot: B
     else:
         await db.set_welcome_text(message.chat.id, clean_text, buttons_json)
 
-    await message.answer("✅ Welcome message set ho gaya! Check karne ke liye /preview use karo.", link_preview_options=get_no_preview())
+    await message.answer("✅ Welcome message set ho gaya! Check karne ke liye /preview use karo.", link_preview_options=get_link_preview_config())
 
 
 @router.message(Command("resetwelcome"))
 async def cmd_resetwelcome(message: Message, bot: Bot):
     if message.chat.type == "private":
-        await message.answer("Ye command sirf groups mein kaam karta hai.", link_preview_options=get_no_preview())
+        await message.answer("Ye command sirf groups mein kaam karta hai.", link_preview_options=get_link_preview_config())
         return
     if not await is_admin(bot, message.chat, message.from_user):
-        await message.answer("Ye command sirf group admins use kar sakte hain.", link_preview_options=get_no_preview())
+        await message.answer("Ye command sirf group admins use kar sakte hain.", link_preview_options=get_link_preview_config())
         return
 
     await db.ensure_chat_row(message.chat.id, message.chat.title or "")
     await db.reset_welcome(message.chat.id)
-    await message.answer("♻️ Welcome message default pe reset ho gaya.", link_preview_options=get_no_preview())
+    await message.answer("♻️ Welcome message default pe reset ho gaya.", link_preview_options=get_link_preview_config())
 
 
 @router.message(Command("preview"))
 async def cmd_preview(message: Message, bot: Bot):
     if message.chat.type == "private":
-        await message.answer("Ye command sirf groups mein kaam karta hai.", link_preview_options=get_no_preview())
+        await message.answer("Ye command sirf groups mein kaam karta hai.", link_preview_options=get_link_preview_config())
         return
 
     settings = await db.get_settings(message.chat.id)
@@ -227,7 +229,7 @@ async def _send_welcome(chat_id: int, bot: Bot, settings: dict, text: str, keybo
                 chat_id,
                 "👇",
                 reply_markup=keyboard,
-                link_preview_options=get_no_preview(),
+                link_preview_options=get_link_preview_config(),
             )
             sent_ids.append(btn_msg.message_id)
         return sent_ids
@@ -235,25 +237,35 @@ async def _send_welcome(chat_id: int, bot: Bot, settings: dict, text: str, keybo
     media_type = settings["media_type"]
     file_id = settings["media_file_id"]
 
-    if media_type == "photo" and file_id:
-        msg = await bot.send_photo(chat_id, file_id, caption=text, reply_markup=keyboard)
-    elif media_type == "video" and file_id:
-        msg = await bot.send_video(chat_id, file_id, caption=text, reply_markup=keyboard)
-    elif media_type == "animation" and file_id:
-        msg = await bot.send_animation(chat_id, file_id, caption=text, reply_markup=keyboard)
-    elif media_type == "sticker" and file_id:
-        sticker_msg = await bot.send_sticker(chat_id, file_id)
-        sent_ids.append(sticker_msg.message_id)
-        msg = None
-        if text.strip():
-            msg = await bot.send_message(chat_id, text, reply_markup=keyboard, link_preview_options=get_no_preview())
-    elif media_type == "document" and file_id:
-        msg = await bot.send_document(chat_id, file_id, caption=text, reply_markup=keyboard)
-    else:
-        msg = await bot.send_message(chat_id, text, reply_markup=keyboard, link_preview_options=get_no_preview())
+    try:
+        if media_type == "photo" and file_id:
+            msg = await bot.send_photo(chat_id, file_id, caption=text, reply_markup=keyboard, parse_mode="HTML")
+        elif media_type == "video" and file_id:
+            msg = await bot.send_video(chat_id, file_id, caption=text, reply_markup=keyboard, parse_mode="HTML")
+        elif media_type == "animation" and file_id:
+            msg = await bot.send_animation(chat_id, file_id, caption=text, reply_markup=keyboard, parse_mode="HTML")
+        elif media_type == "sticker" and file_id:
+            sticker_msg = await bot.send_sticker(chat_id, file_id)
+            sent_ids.append(sticker_msg.message_id)
+            msg = None
+            if text.strip():
+                msg = await bot.send_message(chat_id, text, reply_markup=keyboard, parse_mode="HTML", link_preview_options=get_link_preview_config())
+        elif media_type == "document" and file_id:
+            msg = await bot.send_document(chat_id, file_id, caption=text, reply_markup=keyboard, parse_mode="HTML")
+        else:
+            msg = await bot.send_message(chat_id, text, reply_markup=keyboard, parse_mode="HTML", link_preview_options=get_link_preview_config())
 
-    if msg:
-        sent_ids.append(msg.message_id)
+        if msg:
+            sent_ids.append(msg.message_id)
+    except Exception as err:
+        # Fallback without parse_mode if HTML entity error occurs on user custom text
+        if media_type == "video" and file_id:
+            msg = await bot.send_video(chat_id, file_id, caption=text, reply_markup=keyboard)
+        else:
+            msg = await bot.send_message(chat_id, text, reply_markup=keyboard, link_preview_options=get_link_preview_config())
+        if msg:
+            sent_ids.append(msg.message_id)
+
     return sent_ids
 
 
@@ -279,7 +291,7 @@ async def _send_welcome_card(chat, user, bot: Bot, settings: dict, member_count:
         avatar_bytes=avatar_bytes,
     )
     photo = BufferedInputFile(card_bytes, filename="welcome_card.png")
-    msg = await bot.send_photo(chat.id, photo, caption=text, reply_markup=keyboard)
+    msg = await bot.send_photo(chat.id, photo, caption=text, reply_markup=keyboard, parse_mode="HTML")
     return [msg.message_id]
 
 
