@@ -28,13 +28,18 @@ logger = logging.getLogger(__name__)
 async def main():
     await db.init_db()
 
-    bot = bot = Bot(
+    bot = Bot(
     token=BOT_TOKEN,
     default=DefaultBotProperties(
         parse_mode=ParseMode.HTML,
-        link_preview_options=LinkPreviewOptions(is_disabled=True),
+        link_preview=False,
     ),
     )
+    
+    
+        
+        
+    
     dp = Dispatcher()
 
     dp.include_router(album_router)
