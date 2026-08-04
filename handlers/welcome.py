@@ -1,5 +1,3 @@
-from aiogram import Router
-router = Router()
 import asyncio
 import json
 
@@ -353,4 +351,4 @@ async def on_new_chat_members(message: Message, bot: Bot):
             await bot.delete_message(message.chat.id, message.message_id)
         except Exception:
             pass
-        
+    
