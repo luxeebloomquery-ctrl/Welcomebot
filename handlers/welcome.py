@@ -66,10 +66,18 @@ def _media_type_and_id(message: Message):
         return "document", message.document.file_id
     return None, None
 
+@router.message(CommandStart())
+async def cmd_start(message: Message):
+    await message.answer(
+        "👋 Welcome!\n\n"
+        "Ye Welcome Bot hai.\n"
+        "Commands dekhne ke liye /help use kare."
+    )
 
 @router.message(Command("help"))
 async def cmd_help(message: Message):
     await message.answer(HELP_TEXT)
+
 
 
 @router.message(Command("settings"))
