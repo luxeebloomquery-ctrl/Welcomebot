@@ -1,5 +1,5 @@
 from aiogram import Router, F, Bot
-from aiogram.filters import Command, CommandObject
+from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.types import Message, ChatMemberUpdated, BufferedInputFile
 from aiogram.filters.chat_member_updated import ChatMemberUpdatedFilter, JOIN_TRANSITION
 
