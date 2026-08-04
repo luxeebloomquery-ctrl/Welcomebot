@@ -4,7 +4,7 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-
+from aiogram.types import LinkPreviewOptions
 from config import BOT_TOKEN
 import database as db
 from handlers.album import router as album_router
@@ -28,7 +28,13 @@ logger = logging.getLogger(__name__)
 async def main():
     await db.init_db()
 
-    bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    bot = bot = Bot(
+    token=BOT_TOKEN,
+    default=DefaultBotProperties(
+        parse_mode=ParseMode.HTML,
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
+    ),
+    )
     dp = Dispatcher()
 
     dp.include_router(album_router)
