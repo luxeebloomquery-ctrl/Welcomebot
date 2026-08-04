@@ -24,7 +24,7 @@ async def cmd_start(message: Message):
     await message.answer(
         "👋 Welcome!\n\n"
         "Ye Welcome Bot hai.\n"
-        "Commands dekhne ke liye /help use kare."
+        "Commands dekhne ke liye /help use kare."  
     )
 
 HELP_TEXT = (
